@@ -67,39 +67,63 @@ namespace {
 
 extern "C" void getUnoScriptUrls(std::vector<std::u16string> * urls) {
     assert(urls != nullptr);
-    OUString const base(emscripten::val::global("document")["baseURI"].as<std::u16string>());
+    
+    auto const globalObj = emscripten::val::global();
     auto const val = emscripten::val::module_property("uno_scripts");
+    
     if (!val.isUndefined()) {
         auto const len = val["length"].as<std::uint32_t>();
-        for (std::uint32_t i = 0; i != len; ++i) {
-            urls->push_back(
-                std::u16string(
-                    rtl::Uri::convertRelToAbs(base, OUString(val[i].as<std::u16string>()))));
+        
+        if (globalObj.hasOwnProperty("document")) {
+            // Browser environment - convert to absolute URLs
+            OUString const base(globalObj["document"]["baseURI"].as<std::u16string>());
+            for (std::uint32_t i = 0; i != len; ++i) {
+                urls->push_back(
+                    std::u16string(
+                        rtl::Uri::convertRelToAbs(base, OUString(val[i].as<std::u16string>()))));
+            }
+        } else {
+            for (std::uint32_t i = 0; i != len; ++i) {
+                urls->push_back(val[i].as<std::u16string>());
+            }
         }
     }
 }
 
 #if HAVE_EMSCRIPTEN_PROXY_TO_PTHREAD
 EM_JS(void, runUnoScriptUrls, (emscripten::EM_VAL handle), {
-    importScripts.apply(self, Emval.toValue(handle));
+    const scripts = Emval.toValue(handle);
+    if (typeof importScripts !== 'undefined') {
+        importScripts.apply(self, scripts);
+    } else {
+        scripts.forEach(async (script) => {
+            const { default: m } = await import(script);
+            m(Module);
+        });
+    }
 });
 #else
 EM_JS(void, runUnoScriptUrls, (emscripten::EM_VAL handle), {
     const urls = Emval.toValue(handle);
-    function step() {
-        if (urls.length !== 0) {
-            const url = urls.shift();
-            fetch(url).then(res => {
-                if (!res.ok) {
-                    throw Error(
-                        "Loading <" + res.url + "> failed with " + res.status + " "
-                        + res.statusText);
-                }
-                return res.blob();
-            }).then(blob => blob.text()).then(text => { eval(text); step(); });
-        }
-    };
-    step();
+    
+    if (typeof importScripts !== 'undefined') {
+        function step() {
+            if (urls.length !== 0) {
+                const url = urls.shift();
+                fetch(url).then(res => {
+                    if (!res.ok) {
+                        throw Error(
+                            "Loading <" + res.url + "> failed with " + res.status + " "
+                            + res.statusText);
+                    }
+                    return res.blob();
+                }).then(blob => blob.text()).then(text => { eval(text); step(); });
+            }
+        };
+        step();
+    } else {
+        urls.forEach(url => import(url).then(m => m(Module)));
+    }
 });
 #endif
 
@@ -108,7 +132,7 @@ EM_JS(void, setupMainChannel, (), {
     self.onmessage = function(e) {
         if (e.data.cmd === "LOWA-channel") {
             self.onmessage = orig;
-            Module.uno_mainPort = e.ports[0];
+            Module.uno_mainPort = e.data.channel;
             Module.uno_init$resolve();
         } else if (orig) {
             orig(e);
@@ -121,13 +145,13 @@ extern "C" void resolveUnoMain(pthread_t id) {
     EM_ASM({
         const sofficeMain = PThread.pthreads[$0];
         const channel = new MessageChannel();
-        sofficeMain.postMessage({cmd:"LOWA-channel"}, [channel.port2]);
+        sofficeMain.postMessage({cmd:"LOWA-channel", channel: channel.port2}, [channel.port2]);
         Module.uno_main$resolve(channel.port1);
     }, id);
 #else
     EM_ASM({
         const channel = new MessageChannel();
-        postMessage({cmd:"LOWA-channel"}, [channel.port2]);
+        postMessage({cmd:"LOWA-channel", channel: channel.port2}, [channel.port2]);
         Module.uno_main$resolve(channel.port1);
     }, id);
 #endif
