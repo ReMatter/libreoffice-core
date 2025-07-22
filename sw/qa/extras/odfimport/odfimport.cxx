@@ -620,6 +620,13 @@ CPPUNIT_TEST_FIXTURE(Test, testTdf128737)
     CPPUNIT_ASSERT_EQUAL(8, getShapes());
 }
 
+CPPUNIT_TEST_FIXTURE(Test, tdf167455)
+{
+    // crashes at import time on macOS
+    createSwDoc("tdf167455.odt");
+    CPPUNIT_ASSERT_EQUAL(1, getPages());
+}
+
 CPPUNIT_TEST_FIXTURE(Test, testCalcFootnoteContent)
 {
     createSwDoc("ooo32780-1.odt");
@@ -1666,6 +1673,13 @@ CPPUNIT_TEST_FIXTURE(Test, testTdf167329)
     // This used to fail an assertion during loafing, because some inserted frames didn't
     // update their inf flags, and still reported to be not in body.
     createSwDoc("chained-boxes-in-min-height-cells.fodt");
+    // This must succeed
+}
+
+CPPUNIT_TEST_FIXTURE(Test, testTdf165156)
+{
+    // This used to hang after loading
+    createSwDoc("tdf165156.odt");
     // This must succeed
 }
 

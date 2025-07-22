@@ -21,7 +21,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.10.1'
+        classpath 'com.android.tools.build:gradle:8.11.0'
     }
 }
 
@@ -33,7 +33,7 @@ dependencies {
             "unoloader.jar"
     ])
     implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'androidx.preference:preference:1.2.1'
 }
 
@@ -43,7 +43,7 @@ base {
 
 android {
     namespace 'org.libreoffice'
-    compileSdk 34
+    compileSdk 35
     buildFeatures {
         buildConfig = true
     }
@@ -62,7 +62,7 @@ android {
     }
     defaultConfig {
         // minSdkVersion is set in liboSettings.gradle
-        targetSdkVersion 34
+        targetSdkVersion 35
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {

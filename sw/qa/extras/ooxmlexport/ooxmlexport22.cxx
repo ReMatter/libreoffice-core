@@ -73,6 +73,39 @@ CPPUNIT_TEST_FIXTURE(Test, testTdf166201_simplePosCM)
                          getProperty<sal_Int32>(getShape(1), u"VertOrientPosition"_ustr));
 }
 
+CPPUNIT_TEST_FIXTURE(Test, testTdf166975)
+{
+    createSwDoc("WordOK.docx");
+
+    CPPUNIT_ASSERT_EQUAL(u"a)"_ustr,
+                         getProperty<OUString>(getParagraph(2), u"ListLabelString"_ustr));
+    // this was a%6%)
+    CPPUNIT_ASSERT_EQUAL(u"aa)"_ustr,
+                         getProperty<OUString>(getParagraph(3), u"ListLabelString"_ustr));
+    // this was a%7%%7%)
+    CPPUNIT_ASSERT_EQUAL(u"aaa)"_ustr,
+                         getProperty<OUString>(getParagraph(4), u"ListLabelString"_ustr));
+    CPPUNIT_ASSERT_EQUAL(u"bbb)"_ustr,
+                         getProperty<OUString>(getParagraph(5), u"ListLabelString"_ustr));
+    CPPUNIT_ASSERT_EQUAL(u"ccc)"_ustr,
+                         getProperty<OUString>(getParagraph(6), u"ListLabelString"_ustr));
+
+    saveAndReload(mpFilter);
+
+    CPPUNIT_ASSERT_EQUAL(u"a)"_ustr,
+                         getProperty<OUString>(getParagraph(2), u"ListLabelString"_ustr));
+    // this was aa%)
+    CPPUNIT_ASSERT_EQUAL(u"aa)"_ustr,
+                         getProperty<OUString>(getParagraph(3), u"ListLabelString"_ustr));
+    // this was aa%a%)
+    CPPUNIT_ASSERT_EQUAL(u"aaa)"_ustr,
+                         getProperty<OUString>(getParagraph(4), u"ListLabelString"_ustr));
+    CPPUNIT_ASSERT_EQUAL(u"bbb)"_ustr,
+                         getProperty<OUString>(getParagraph(5), u"ListLabelString"_ustr));
+    CPPUNIT_ASSERT_EQUAL(u"ccc)"_ustr,
+                         getProperty<OUString>(getParagraph(6), u"ListLabelString"_ustr));
+}
+
 CPPUNIT_TEST_FIXTURE(Test, testTdf165492_exactWithBottomSpacing)
 {
     // Given a document with "exact row height" of 2cm
@@ -271,10 +304,13 @@ DECLARE_OOXMLEXPORT_TEST(testTdf139418, "tdf139418.docx")
     CPPUNIT_ASSERT_EQUAL(sal_Int32(0), nPorLen1);
 
     sal_Int32 nPorLen2 = getXPath(pXmlDoc, "(//SwLinePortion)[2]", "length").toInt32();
-    CPPUNIT_ASSERT_EQUAL(sal_Int32(42), nPorLen2);
+    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), nPorLen2);
 
     sal_Int32 nPorLen3 = getXPath(pXmlDoc, "(//SwLinePortion)[3]", "length").toInt32();
-    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), nPorLen3);
+    CPPUNIT_ASSERT_EQUAL(sal_Int32(41), nPorLen3);
+
+    sal_Int32 nPorLen4 = getXPath(pXmlDoc, "(//SwLinePortion)[4]", "length").toInt32();
+    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), nPorLen4);
 }
 
 CPPUNIT_TEST_FIXTURE(Test, testAnnotationRef)

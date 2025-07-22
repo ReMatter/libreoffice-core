@@ -450,8 +450,8 @@ LIBTOMMATH_TARBALL := ltm-1.3.0.tar.xz
 # three static lines
 # so that git cherry-pick
 # will not run into conflicts
-LIBWEBP_SHA256SUM := 7d6fab70cf844bf6769077bd5d7a74893f8ffd4dfb42861745750c63c2a5c92c
-LIBWEBP_TARBALL := libwebp-1.5.0.tar.gz
+LIBWEBP_SHA256SUM := e4ab7009bf0629fd11982d4c2aa83964cf244cffba7347ecd39019a9e38c4564
+LIBWEBP_TARBALL := libwebp-1.6.0.tar.gz
 # three static lines
 # so that git cherry-pick
 # will not run into conflicts
@@ -487,8 +487,8 @@ MARIADB_CONNECTOR_C_TARBALL := mariadb-connector-c-3.3.15-src.tar.gz
 # three static lines
 # so that git cherry-pick
 # will not run into conflicts
-MDDS_SHA256SUM := 9b077e8d929050e9a432cc131beed2380ac85cfe98b17fc26d01d0ed532129c8
-MDDS_TARBALL := mdds-3.0.0.tar.xz
+MDDS_SHA256SUM := ca295f4c86968a7eb1f5d503ff7ae180e6605210cfb26d01658be42048c0924c
+MDDS_TARBALL := mdds-3.1.0.tar.xz
 # three static lines
 # so that git cherry-pick
 # will not run into conflicts

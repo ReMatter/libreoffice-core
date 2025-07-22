@@ -227,15 +227,21 @@ static SwTwips lcl_GetHeightOfRows( const SwFrame* pStart, tools::Long nCount )
     if ( !nCount || !pStart)
         return 0;
 
+    // There are moments when some rows have correct size, but wrong position: e.g., when a merged
+    // cell is split, the 0-height follow of the previous row is inserted, and arrives here with a
+    // correct height, but positioned at [0, 0]; the following rows have correct position (offset
+    // to the new page's starting Y coordinate). This disallows to simplify the height calculation
+    // to just difference between top row's top and bottom row's bottom.
+    SwTwips nRet = 0;
     SwRectFnSet aRectFnSet(pStart);
-    SwTwips nTop = aRectFnSet.GetTop(pStart->getFrameArea());
-    while (pStart->GetNext() && nCount > 1)
+    while (pStart && nCount > 0)
     {
+        nRet += aRectFnSet.GetHeight(pStart->getFrameArea());
         pStart = pStart->GetNext();
         --nCount;
     }
 
-    return -aRectFnSet.BottomDist(pStart->getFrameArea(), nTop);
+    return nRet;
 }
 
 // Local helper function to insert a new follow flow line
@@ -3129,7 +3135,7 @@ void SwTabFrame::MakeAll(vcl::RenderContext* pRenderContext)
                     // to nDeadLine may not be enough.
                     // tdf#161508 hack: treat oscillation likewise
                     if ((bSplitError && bTryToSplit) // no restart if we did not try to split: i72847, i79426
-                        || posSizeOscillationControl.OscillationDetected(*this))
+                        || (!bSplitError && posSizeOscillationControl.OscillationDetected(*this)))
                     {
                         lcl_RecalcRow(*static_cast<SwRowFrame*>(Lower()), LONG_MAX);
                         setFrameAreaPositionValid(false);
